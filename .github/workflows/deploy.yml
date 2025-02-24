@@ -1,9 +1,10 @@
-name: Deploy to AWS ECS
+name: Deploy to Amazon ECS
 
 on:
   push:
     branches:
       - main  # Runs CI/CD on every push to the main branch
+  workflow_dispatch:  # Enables manual trigger in GitHub Actions UI
 
 jobs:
   deploy:
@@ -13,9 +14,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
 
       - name: Build, Tag, and Push Docker Image to Amazon ECR
         env:
@@ -29,8 +39,9 @@ jobs:
 
       - name: Deploy to Amazon ECS
         env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           CLUSTER_NAME: flask-cluster
           SERVICE_NAME: flask-service
           IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/flask-containerization:latest
         run: |
-          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_REGION
