@@ -3,8 +3,8 @@ name: Deploy to Amazon ECS
 on:
   push:
     branches:
-      - main  # Runs CI/CD on every push to the main branch
-  workflow_dispatch:  # Enables manual trigger in GitHub Actions UI
+      - main
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   deploy:
@@ -23,7 +23,6 @@ jobs:
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-
 
       - name: Build, Tag, and Push Docker Image to Amazon ECR
         env:
